@@ -111,21 +111,23 @@ struct StringsStructGenerator: ExternalOnlyStructGenerator {
       }
     }
 
-    // Warnings about missing translations
-    for (locale, lss) in strings.grouped(by: { $0.locale }) {
-      let filenameLocale = locale.withFilename(filename)
-      let sourceKeys = primaryKeys ?? Set(allParams.keys)
+    if !useDevelopmentLanguageDefaults {
+      // Warnings about missing translations
+      for (locale, lss) in strings.grouped(by: { $0.locale }) {
+        let filenameLocale = locale.withFilename(filename)
+        let sourceKeys = primaryKeys ?? Set(allParams.keys)
 
-      let missing = sourceKeys.subtracting(lss.flatMap { $0.dictionary.keys })
+        let missing = sourceKeys.subtracting(lss.flatMap { $0.dictionary.keys })
 
-      if missing.isEmpty {
-        continue
+        if missing.isEmpty {
+          continue
+        }
+
+        let paddedKeys = missing.sorted().map { "'\($0)'" }
+        let paddedKeysString = paddedKeys.joined(separator: ", ")
+
+        warn("Strings file \(filenameLocale) is missing translations for keys: \(paddedKeysString)")
       }
-
-      let paddedKeys = missing.sorted().map { "'\($0)'" }
-      let paddedKeysString = paddedKeys.joined(separator: ", ")
-
-      warn("Strings file \(filenameLocale) is missing translations for keys: \(paddedKeysString)")
     }
 
     // Warnings about extra translations
