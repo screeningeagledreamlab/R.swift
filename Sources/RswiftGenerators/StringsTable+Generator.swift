@@ -58,7 +58,7 @@ extension Struct {
 
 extension StringsTable {
 
-    public static func generateStruct(tables: [StringsTable], developmentLanguage: String?, prefix: SwiftIdentifier) -> Struct {
+    public static func generateStruct(tables: [StringsTable], developmentLanguage: String?, warnMissingTranslations: Bool, prefix: SwiftIdentifier) -> Struct {
         let structName = SwiftIdentifier(name: "string", lowercaseStartingCharacters: false)
         let qualifiedName = prefix + structName
         let warning: (String) -> Void = { print("warning: [R.swift]", $0) }
@@ -74,6 +74,7 @@ extension StringsTable {
                     filename: filename,
                     tables: tables,
                     developmentLanguage: developmentLanguage,
+                    warnMissingTranslations: warnMissingTranslations,
                     prefix: qualifiedName,
                     warning: warning
                 )
@@ -109,12 +110,12 @@ extension StringsTable {
         )
     }
 
-    private static func generateStruct(filename: String, tables: [StringsTable], developmentLanguage: String?, prefix: SwiftIdentifier, warning: (String) -> Void) -> Struct? {
+    private static func generateStruct(filename: String, tables: [StringsTable], developmentLanguage: String?, warnMissingTranslations: Bool, prefix: SwiftIdentifier, warning: (String) -> Void) -> Struct? {
 
         let structName = SwiftIdentifier(name: filename)
         let qualifiedName = prefix + structName
 
-        let strings = computeStringsWithParams(filename: filename, tables: tables, developmentLanguage: developmentLanguage, warning: warning)
+        let strings = computeStringsWithParams(filename: filename, tables: tables, developmentLanguage: developmentLanguage, warnMissingTranslations: warnMissingTranslations, warning: warning)
         let vargetters = strings.map { $0.generateVarGetter() }
 
         // only functions with named parameters
@@ -177,7 +178,7 @@ extension StringsTable {
     }
 
     // Ahem, this code is a bit of a mess. It might need cleaning up... ;-)
-    private static func computeStringsWithParams(filename: String, tables: [StringsTable], developmentLanguage: String?, warning: (String) -> Void) -> [StringWithParams] {
+    private static func computeStringsWithParams(filename: String, tables: [StringsTable], developmentLanguage: String?, warnMissingTranslations: Bool, warning: (String) -> Void) -> [StringWithParams] {
 
         var allParams: [String: [(LocaleReference, String, [StringParam])]] = [:]
         let primaryLanguage: String?
@@ -216,21 +217,23 @@ extension StringsTable {
             }
         }
 
-        // Warnings about missing translations
-        for (locale, lss) in Dictionary(grouping: tables, by: \.locale) {
-            let filenameLocale = locale.debugDescription(filename: filename)
-            let sourceKeys = primaryKeys ?? Set(allParams.keys)
-
-            let missing = sourceKeys.subtracting(lss.flatMap { $0.dictionary.keys })
-
-            if missing.isEmpty {
-                continue
+        if warnMissingTranslations {
+            // Warnings about missing translations
+            for (locale, lss) in Dictionary(grouping: tables, by: \.locale) {
+                let filenameLocale = locale.debugDescription(filename: filename)
+                let sourceKeys = primaryKeys ?? Set(allParams.keys)
+                
+                let missing = sourceKeys.subtracting(lss.flatMap { $0.dictionary.keys })
+                
+                if missing.isEmpty {
+                    continue
+                }
+                
+                let paddedKeys = missing.sorted().map { "'\($0)'" }
+                let paddedKeysString = paddedKeys.joined(separator: ", ")
+                
+                warning("Strings file \(filenameLocale) is missing translations for keys: \(paddedKeysString)")
             }
-
-            let paddedKeys = missing.sorted().map { "'\($0)'" }
-            let paddedKeysString = paddedKeys.joined(separator: ", ")
-
-            warning("Strings file \(filenameLocale) is missing translations for keys: \(paddedKeysString)")
         }
 
         // Warnings about extra translations

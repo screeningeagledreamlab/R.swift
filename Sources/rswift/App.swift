@@ -43,6 +43,9 @@ struct GlobalOptions: ParsableArguments {
     @Option(help: "The access level [public|internal] to use for the generated R-file")
     var accessLevel: AccessLevel = .internalLevel
 
+    @Option(help: "Enable warnings about missing translations")
+    var warnMissingTranslations: Bool = true
+
     @Option(help: "Path to pattern file that describes files that should be ignored")
     var rswiftignore = ".rswiftignore"
 
@@ -108,6 +111,7 @@ extension App {
                 codeSignEntitlements: codeSignEntitlements.map(URL.init(fileURLWithPath:)),
                 omitMainLet: globals.omitMainLet,
                 rswiftIgnoreURL: rswiftIgnoreURL,
+                warnMissingTranslations: globals.warnMissingTranslations,
                 sourceTreeURLs: sourceTreeURLs
             )
 

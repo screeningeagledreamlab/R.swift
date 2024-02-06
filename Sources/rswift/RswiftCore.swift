@@ -36,6 +36,7 @@ public struct RswiftCore {
     let infoPlistFile: URL?
     let codeSignEntitlements: URL?
     let omitMainLet: Bool
+    let warnMissingTranslations: Bool
 
     let sourceTreeURLs: SourceTreeURLs
 
@@ -52,6 +53,7 @@ public struct RswiftCore {
         codeSignEntitlements: URL?,
         omitMainLet: Bool,
         rswiftIgnoreURL: URL,
+        warnMissingTranslations: Bool,
         sourceTreeURLs: SourceTreeURLs
     ) {
         self.outputURL = outputURL
@@ -63,6 +65,7 @@ public struct RswiftCore {
         self.infoPlistFile = infoPlistFile
         self.codeSignEntitlements = codeSignEntitlements
         self.omitMainLet = omitMainLet
+        self.warnMissingTranslations = warnMissingTranslations
 
         self.rswiftIgnoreURL = rswiftIgnoreURL
 
@@ -175,6 +178,7 @@ public struct RswiftCore {
         let stringStruct = StringsTable.generateStruct(
             tables: resources.strings,
             developmentLanguage: developmentRegion,
+            warnMissingTranslations: warnMissingTranslations,
             prefix: qualifiedName
         )
 
